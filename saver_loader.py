@@ -2,24 +2,43 @@
 
 import tensorflow as tf
 
-# All variables and operation will be defined in default graph
+# if not assign a graph, all variables and operation will be defined in default graph
+g1 = tf.Graph()
+g2 = tf.Graph()
 
-w1 = tf.placeholder(float, name='w1')
-w2 = tf.placeholder(float, name='w2')
-b1 = tf.Variable(2.0, name='b1')
-feed_dict = {w1: 4, w2: 8}
+g2.as_default()
+# g1.as_default()
+# assert g1 == tf.get_default_graph()
+# assign g1 as the default graph
+with g1.as_default():
+    w1 = tf.placeholder(float, name='w1')
+    w2 = tf.placeholder(float, name='w2')
+    b1 = tf.Variable(2.0, name='b1')
+    feed_dict = {w1: 4, w2: 8}
+    w3 = tf.add(w1, w2, name='add')
+    w4 = tf.multiply(w3, b1, name="op_to_multiply")
 
-w3 = tf.add(w1, w2, name='add')
-w4 = tf.multiply(w3, b1, name="op_to_multiply")
+with g2.as_default():
+    b3 = tf.Variable(6.0, name='b3')
+    b4 = tf.Variable(9.0, name='b4')
+    b5 = tf.Variable(2.80, name='b5')
+    b6 = tf.Variable(2.90, name='b6')
+    b7 = tf.Variable(2.80, name='b7')
+    w9 = tf.add(b3, b6, name='add_g2')
 
-ops = [op.name for op in tf.get_default_graph().get_operations()]
-print(ops)
+with tf.Session(graph=g2) as sess:
+    sess.run(tf.global_variables_initializer())
+    print(sess.run(w9))
+    print([ops.name for ops in sess.graph.get_operations()])
 
-with tf.Session() as sess:
+with tf.Session(graph=g1) as sess:
+    # what tf do when tf.global_variables_initializer()
+    # all 
     sess.run(tf.global_variables_initializer())
     feed_defalut = {w1: 1.2, w2: 1.4}
     print("result: ", sess.run(w4, feed_dict=feed_defalut))
     ops = [op.name for op in sess.graph.get_operations()]
+    print("graphs in g1\n")
     print(ops)
     multiply_tensor = sess.graph.get_tensor_by_name('op_to_multiply:0')
     add_tensor = sess.graph.get_tensor_by_name('add:0')
